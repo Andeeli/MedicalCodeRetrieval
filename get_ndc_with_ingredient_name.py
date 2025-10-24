@@ -1,3 +1,10 @@
+import requests
+import json
+from datetime import datetime
+import time
+import pandas as pd
+from tqdm import tqdm
+
 def safe_get_json(url):
     """Make a request with no retries and without error messages"""
     try:
@@ -20,8 +27,7 @@ def print_status(message):
 
 # List of ingredients to process
 ingredients = [
-    'fluoxetine', 'sertraline', 'escitalopram',
-    'citalopram', 'bupropion', 'venlafaxine', 'duloxetine'
+    'Exenatide', 'Liraglutide', 'Semaglutide', 'Dulaglutide', 'Lixisenatide', 'Albiglutide', 'Tirzepatide'
 ]
 
 # Define term types for drug products expected to have NDC codes
@@ -32,7 +38,7 @@ results = []
 total_rxcui_count = 0
 total_ndc_count = 0
 
-print_status(f"Starting NDC retrieval for {len(ingredients)} ingredients")
+# print_status(f"Starting NDC retrieval for {len(ingredients)} ingredients")
 
 # Iterate over each ingredient with progress tracking
 for i, ingredient in enumerate(ingredients, 1):
@@ -104,6 +110,14 @@ for i, ingredient in enumerate(ingredients, 1):
                     'rxcui description': rxcui_description,
                     'ndc description': ndc_description
                 })
+        else:
+            results.append({
+                'ingredient': ingredient,
+                'rxcui': rxcui,  # Added rxcui column
+                'ndc': None,
+                'rxcui description': rxcui_description,
+                'ndc description': None
+            })
                 
         # Be nice to the API
         if i % 10 == 0:
@@ -118,7 +132,3 @@ for i, ingredient in enumerate(ingredients, 1):
 # Step 4: Create a pandas DataFrame from the results and remove rows with missing NDC values
 print_status(f"Creating final DataFrame from {len(results)} results")
 df = pd.DataFrame(results)
-df = df.dropna(subset=['ndc'])
-
-print_status(f"Final results: {len(df)} rows with valid NDCs")
-print_status(f"Processed {len(ingredients)} ingredients, {total_rxcui_count} RxCUIs, found {total_ndc_count} NDCs")
